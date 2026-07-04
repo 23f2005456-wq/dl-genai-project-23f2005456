@@ -212,3 +212,5 @@ python src/train.py
 
 # The script prints per-fold MAP@3, CV MAP@3, and final ensemble MAP@3
 ```
+
+<!-- Focus: Multi-class QA and semantic similarity ensembling -->
