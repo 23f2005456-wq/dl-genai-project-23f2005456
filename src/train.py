@@ -1501,3 +1501,4 @@ print("📊 Confusion  → confusion_matrix.png")
 print("⚡ Models     → models/")
 
 # TODO: Support dynamic TF-IDF feature sizes based on input dataset scale
+# Note: Min DF helps filter out non-informative keywords from vocabulary
