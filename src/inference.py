@@ -395,3 +395,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Note: Verifies test file path existence and triggers clear error on failure
