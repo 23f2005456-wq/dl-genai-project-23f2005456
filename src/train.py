@@ -1502,3 +1502,4 @@ print("⚡ Models     → models/")
 
 # TODO: Support dynamic TF-IDF feature sizes based on input dataset scale
 # Note: Min DF helps filter out non-informative keywords from vocabulary
+# Note: Print clean summary tables of cross-validation fold scores
