@@ -363,3 +363,5 @@ if USE_WANDB:
     except Exception as e:
         print(f"  ⚠️ Could not upload wandb artifact: {e}")
     wandb.finish()
+
+# Formatting: Added visual separator lines to optimization logs
