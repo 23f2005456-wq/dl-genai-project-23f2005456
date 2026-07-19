@@ -99,3 +99,5 @@ sub = pd.DataFrame({"ID": test_df["id"].values, "Prediction": preds})
 sub.to_csv(BASE / "submission.csv", index=False)
 sub.to_csv(BASE / "outputs/submission_pure_embeddings.csv", index=False)
 print("🎉 Saved pure embedding submission to base dir and outputs/")
+
+# Embedding info: MPNet, BGE, and E5 models are combined here
