@@ -54,3 +54,5 @@ sub = pd.DataFrame({"ID": test_df["id"].values, "Prediction": preds})
 sub.to_csv(os.path.join(BASE, "submission.csv"), index=False)
 sub.to_csv(os.path.join(OUT, "submission_conservative_blend.csv"), index=False)
 print("🎉 Conservative Blend Submission generated!")
+
+# Blending: Standardizes scaling before performing weighted sums
