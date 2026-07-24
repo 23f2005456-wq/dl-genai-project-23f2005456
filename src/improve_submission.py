@@ -20,7 +20,11 @@ warnings.filterwarnings("ignore")
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # ── Weights & Biases ──────────────────────────────────────────────────────────
-USE_WANDB = False
+try:
+    import wandb
+    USE_WANDB = True
+except ImportError:
+    USE_WANDB = False
 
 SEED = 42
 random.seed(SEED); np.random.seed(SEED)
