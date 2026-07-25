@@ -131,6 +131,8 @@ print(f"Label distribution:\n{train_df['label'].value_counts().sort_index()}")
 
 
 # ─────────────────────────── CELL 4: EDA ─────────────────────────────────────
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import seaborn as sns
@@ -463,9 +465,18 @@ def build_features(df: pd.DataFrame,
         )
         tfidf_vectorizer.fit(all_texts)
 
+    # Vectorized TF-IDF Transform
+    prompts = df["prompt"].astype(str).tolist()
+    prompt_vecs = tfidf_vectorizer.transform(prompts)
+    
+    option_vecs = {}
+    for opt in OPTION_COLS:
+        options = df[opt].astype(str).tolist()
+        option_vecs[opt] = tfidf_vectorizer.transform(options)
+
     # ── Per-sample feature vectors ─────────────────────────────────────────────
     rows = []
-    for _, row in df.iterrows():
+    for idx, (_, row) in enumerate(df.iterrows()):
         prompt      = str(row["prompt"])
         all_options = [str(row[c]) for c in OPTION_COLS]
 
@@ -477,12 +488,11 @@ def build_features(df: pd.DataFrame,
         else:
             bm25_scores = np.zeros(5)
 
-        # TF-IDF cosine sim: prompt vs each option
-        prompt_vec = tfidf_vectorizer.transform([prompt])
+        p_vec = prompt_vecs[idx]
         for i, opt in enumerate(OPTION_COLS):
             option       = str(row[opt])
-            opt_vec      = tfidf_vectorizer.transform([option])
-            tfidf_cos    = float(cosine_similarity(prompt_vec, opt_vec)[0, 0])
+            o_vec        = option_vecs[opt][idx]
+            tfidf_cos    = float(p_vec.dot(o_vec.T).toarray()[0, 0])
 
             feat = build_feature_row(prompt, option, i, all_options)
             feat["tfidf_cosine"] = tfidf_cos
@@ -572,25 +582,25 @@ class ClassicalEnsemble:
                                cv=3, method="isotonic")),
             ]),
             "lgbm": lgb.LGBMClassifier(
-                n_estimators=1000, learning_rate=0.03,
-                max_depth=5, num_leaves=31,
-                subsample=0.8, colsample_bytree=0.8,
-                reg_alpha=0.5, reg_lambda=0.5,
+                n_estimators=500, learning_rate=0.02,
+                max_depth=4, num_leaves=15,
+                subsample=0.7, colsample_bytree=0.7,
+                reg_alpha=1.5, reg_lambda=1.5,
                 min_child_samples=20, random_state=SEED,
                 verbose=-1, n_jobs=-1,
             ),
             "xgb": xgb.XGBClassifier(
-                n_estimators=1000, learning_rate=0.03,
-                max_depth=5, subsample=0.8,
-                colsample_bytree=0.8, reg_alpha=0.5,
+                n_estimators=500, learning_rate=0.02,
+                max_depth=4, subsample=0.7,
+                colsample_bytree=0.7, reg_alpha=1.5, reg_lambda=1.5,
                 eval_metric="logloss", random_state=SEED,
                 verbosity=0, n_jobs=-1,
-                early_stopping_rounds=50,  # new XGB API: in constructor
+                early_stopping_rounds=30,  # new XGB API: in constructor
             ),
             "cat": cb.CatBoostClassifier(
-                iterations=1000, learning_rate=0.03,
-                depth=6, l2_leaf_reg=5.0,
-                subsample=0.8, random_seed=SEED,
+                iterations=500, learning_rate=0.02,
+                depth=5, l2_leaf_reg=8.0,
+                subsample=0.7, random_seed=SEED,
                 verbose=0,
             ),
         }
@@ -637,8 +647,7 @@ class ClassicalEnsemble:
                 elif model_name == "xgb":
                     model.fit(X_tr, y_tr,
                               eval_set=[(X_vl, y_vl)],
-                              verbose=False,
-                              early_stopping_rounds=50)
+                              verbose=False)
                 elif model_name == "cat":
                     model.fit(X_tr, y_tr,
                               eval_set=(X_vl, y_vl),
@@ -678,6 +687,7 @@ class ClassicalEnsemble:
             if model_name == "lgbm":
                 model.fit(X, y, callbacks=[lgb.log_evaluation(-1)])
             elif model_name == "xgb":
+                model.set_params(early_stopping_rounds=None)
                 model.fit(X, y, verbose=False)
             elif model_name == "cat":
                 model.fit(X, y, verbose=False)
@@ -725,7 +735,7 @@ def plot_feature_importance(model, feature_names: List[str],
 
 feat_row_sample = list(build_feature_row(
     "sample prompt", "sample option A", 0,
-    ["A opt", "B opt", "C opt", "D opt", "E opt"]
+    ["sample option A", "sample option B", "sample option C", "sample option D", "sample option E"]
 ).keys()) + ["tfidf_cosine", "bm25_score", "bm25_rank"]
 
 for mn in ["lgbm", "xgb", "cat"]:
@@ -886,11 +896,11 @@ except ImportError:
 
 
 DEBERTA_MODEL_ID    = "microsoft/deberta-v3-base"   # use large if GPU >16GB
-DEBERTA_MAX_LEN     = 256
-DEBERTA_BATCH_SIZE  = 4
-DEBERTA_ACCUM_STEPS = 8   # effective batch = 4*8 = 32
-DEBERTA_EPOCHS      = 3
-DEBERTA_LR          = 2e-5
+DEBERTA_MAX_LEN     = 192
+DEBERTA_BATCH_SIZE  = 1
+DEBERTA_ACCUM_STEPS = 16   # effective batch = 1*16 = 16
+DEBERTA_EPOCHS      = 1
+DEBERTA_LR          = 1.5e-5
 DEBERTA_WARMUP_RATIO= 0.1
 DEBERTA_WEIGHT_DECAY= 0.01
 LABEL_SMOOTHING     = 0.1
@@ -990,6 +1000,11 @@ def train_deberta(train_df: pd.DataFrame,
 
         model = AutoModelForMultipleChoice.from_pretrained(DEBERTA_MODEL_ID)
         model = model.to(DEVICE)
+        try:
+            model.gradient_checkpointing_enable()
+            print("  ✓ Gradient checkpointing enabled for DeBERTa")
+        except Exception as e:
+            print(f"  ⚠️ Could not enable gradient checkpointing: {e}")
 
         optimizer = AdamW(model.parameters(), lr=DEBERTA_LR,
                           weight_decay=DEBERTA_WEIGHT_DECAY)
