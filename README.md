@@ -11,23 +11,18 @@
 
 ```
 DL GEN AI/
-├── mcq_pipeline.py          # Main training pipeline (run this first)
-├── mcq_pipeline.ipynb       # Jupyter notebook version
-├── inference.py             # Standalone inference script
-├── requirements.txt         # All dependencies
-├── README.md                # This file
-├── train (1).csv            # Training data
-├── test (1).csv             # Test data
-├── sample_submission (2).csv
-├── submission.csv           # Generated submission (after pipeline runs)
-├── outputs/                 # EDA plots, score matrices, submissions
-│   ├── eda_analysis.png
-│   ├── confusion_matrix.png
-│   ├── confidence_distribution.png
-│   ├── alpha_sweep.png
-│   ├── feat_importance_*.png
-│   └── st_train_*.npy / st_test_*.npy
-└── saved_models/            # Trained model checkpoints
+├── notebooks/
+│   └── mcq_pipeline.ipynb       # Jupyter notebook version
+├── src/
+│   ├── train.py                 # Main training pipeline (run this first)
+│   ├── inference.py             # Standalone inference script
+│   └── improve_submission.py    # Optuna-based ensembling weight optimization
+├── models/                      # Trained model checkpoints
+├── outputs/                     # EDA plots, score matrices, submissions
+├── reports/                     # Reports folder
+├── requirements.txt             # All dependencies
+└── README.md                    # This file
+```
     ├── lr_full_model.joblib
     ├── svm_full_model.joblib
     ├── lgbm_full_model.joblib
@@ -57,21 +52,20 @@ python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
 ### 2. Run the full training pipeline
 
 ```bash
-cd "DL GEN AI"
-python mcq_pipeline.py
+python src/train.py
 ```
 
 Or open the Jupyter notebook:
 ```bash
-jupyter notebook mcq_pipeline.ipynb
+jupyter notebook notebooks/mcq_pipeline.ipynb
 ```
 
 ### 3. Run inference only (after training)
 
 ```bash
-python inference.py \
+python src/inference.py \
     --test_path "test (1).csv" \
-    --model_dir saved_models \
+    --model_dir models \
     --output submission.csv
 ```
 
@@ -206,15 +200,15 @@ MAP@3 = mean of all AP@3 scores
 - `outputs/confusion_matrix.png` — OOF confusion matrix
 - `outputs/confidence_distribution.png` — Prediction confidence histogram
 - `outputs/feat_importance_*.png` — Feature importance plots
-- `saved_models/` — All trained model checkpoints
+- `models/` — All trained model checkpoints
 
 ---
 
-## 🧪 Reproducing Results
+## ── Reproducing Results
 
 ```bash
 # Set seed (already default=42 in config)
-python mcq_pipeline.py
+python src/train.py
 
 # The script prints per-fold MAP@3, CV MAP@3, and final ensemble MAP@3
 ```
