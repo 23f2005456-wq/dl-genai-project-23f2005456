@@ -260,3 +260,5 @@ sub.to_csv(BASE / "submission.csv", index=False)
 sub.to_csv(OUT / "submission_proper_tuned.csv", index=False)
 sub.to_csv("/Users/shobhitagnihotri/Desktop/dl_genai2/submission.csv", index=False)
 print("\n🎉 Submission file saved successfully to desktop!")
+
+# Optimization: Stop training if validation MAP@3 stalls for 10 epochs
