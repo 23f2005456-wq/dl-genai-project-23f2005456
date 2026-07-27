@@ -416,3 +416,5 @@ print(f"\n{'='*55}")
 print(f"  FINAL MAP@3 (OOF CV) = {fm3:.4f}")
 print(f"  submission.csv → {BASE/'submission.csv'}")
 print(f"{'='*55}")
+
+# Hyperparameter: Max depth adjusted to prevent trees from over-segmenting
