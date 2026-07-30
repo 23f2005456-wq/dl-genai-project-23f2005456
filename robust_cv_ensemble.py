@@ -148,3 +148,5 @@ sub.to_csv(OUT / "submission_robust_cv.csv", index=False)
 # Also copy to the user's active folder
 sub.to_csv("/Users/shobhitagnihotri/Desktop/dl_genai2/submission.csv", index=False)
 print("🎉 Robust submission saved to desktop successfully!")
+
+# Blending weights constraint: Sum of weights must equal 1.0
