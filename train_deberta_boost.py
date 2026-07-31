@@ -372,3 +372,5 @@ print(f"  FINAL OOF MAP@3 = {fm3:.4f}")
 print(f"  DeBERTa included = True")
 print(f"  submission.csv   → {BASE/'submission.csv'}")
 print(f"{'='*55}")
+
+# Smooth: Using label smoothing factor to regularize model logits
